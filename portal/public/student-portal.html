@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Student Portal</title>
+<style>
+:root{--bg:#f1eaea;--card:#fff;--ink:#222;--mute:#555;--line:#e3d8d8;--green:#1e7a34;--purple:#7a2c8c;--blue:#1a56b8;--pink:#f5b5c3;--red:#d9263b;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#1c1719;--card:#282123;--ink:#f1eaea;--mute:#b9aeb0;--line:#3c3336;--pink:#8a3a4d}}
+:root[data-theme="dark"]{--bg:#1c1719;--card:#282123;--ink:#f1eaea;--mute:#b9aeb0;--line:#3c3336;--pink:#8a3a4d}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 Arial,Helvetica,sans-serif}
+nav{background:var(--green);color:#fff;display:flex;justify-content:space-between;align-items:center;padding:14px 28px;flex-wrap:wrap;gap:10px}
+nav .brand{font-weight:700;font-size:22px}
+nav .links{display:flex;gap:8px}
+nav a{color:#fff;text-decoration:none;padding:6px 14px;border-radius:5px;font-size:15px;cursor:pointer}
+nav a.on{background:#fff;color:#222}
+nav a.logout{background:var(--red)}
+main{max-width:900px;margin:0 auto;padding:36px 24px 60px}
+h1{font-size:32px;margin:0 0 20px}
+h2{margin:0 0 12px}
+.sub{color:var(--mute);margin:-12px 0 22px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:20px}
+.card{background:var(--card);border-radius:10px;padding:22px;box-shadow:0 2px 10px rgba(0,0,0,.08)}
+.card h3{margin:0 0 8px;font-size:22px}
+.card p{margin:0 0 12px;color:var(--mute);font-size:14px}
+.btn{display:inline-block;border:0;border-radius:6px;padding:10px 18px;color:#fff;background:var(--purple);font:inherit;font-size:15px;cursor:pointer}
+.btn.blue{background:var(--blue)}
+.btn:focus-visible,a:focus-visible,input:focus-visible,.tab:focus-visible{outline:3px solid #f2b705;outline-offset:2px}
+.detail{max-width:600px}
+.detail ul{margin:6px 0 20px;padding-left:22px}
+.center{max-width:420px;margin:30px auto}
+.tabs{display:flex;gap:22px;border-bottom:1px solid var(--line);margin-bottom:20px}
+.tab{background:none;border:0;border-bottom:2px solid transparent;padding:8px 2px;font:inherit;color:var(--mute);cursor:pointer}
+.tab.on{color:var(--blue);border-color:var(--blue);font-weight:700}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px;margin-top:10px}
+.stat{background:var(--pink);border-radius:8px;padding:22px 10px;text-align:center}
+.stat b{display:block;font-size:30px}
+.stat span{font-size:14px}
+.check{display:flex;gap:8px;align-items:center;margin:10px 0}
+.row{display:grid;gap:4px;margin:12px 0}
+.row input{padding:9px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--ink);font:inherit}
+.prog{height:8px;background:var(--line);border-radius:4px;overflow:hidden;margin:6px 0 14px}
+.prog i{display:block;height:100%;background:var(--green)}
+[hidden]{display:none!important}
+</style>
+</head>
+<body>
+<nav>
+  <div class="brand">Student Portal</div>
+  <div class="links">
+    <a data-go="home">Home</a>
+    <a data-go="courses">Courses</a>
+    <a data-go="dashboard" id="navDash" hidden>Dashboard</a>
+    <a data-go="login" id="navLogin">Login</a>
+    <a id="navLogout" class="logout" hidden>Logout</a>
+  </div>
+</nav>
+<main id="view"></main>
+
+<script>
+const COURSES={
+ java:{name:'Java',desc:'Learn Java and object-oriented programming.',weeks:12,topics:['Java Basics','Loops and Methods','Classes and Objects','Inheritance and Interfaces'],pct:70},
+ python:{name:'Python',desc:'Learn Python programming from scratch.',weeks:10,topics:['Python Fundamentals','Functions','Data Structures','Projects'],pct:85},
+ html:{name:'HTML',desc:'Build the structure of web pages.',weeks:4,topics:['Tags and Elements','Links and Images','Tables and Forms','Semantic Layout'],pct:95},
+ css:{name:'CSS',desc:'Style web pages with layout and colors.',weeks:4,topics:['Selectors','Box Model','Flexbox and Grid','Responsive Design'],pct:78}
+};
+let user=null, tab='overview', settings={email:true,remind:false};
+try{user=localStorage.getItem('sp_user');const s=localStorage.getItem('sp_set');if(s)settings=JSON.parse(s)}catch(e){}
+const $=q=>document.querySelector(q);
+const go=r=>{location.hash='#/'+r};
+
+function route(){
+  const p=(location.hash.replace('#/','')||'home').split('/');
+  let page=p[0];
+  if(page==='dashboard'&&!user)page='login';
+  document.querySelectorAll('nav a[data-go]').forEach(a=>a.classList.toggle('on',a.dataset.go===(page==='course'?'courses':page)));
+  $('#navLogin').hidden=!!user;$('#navDash').hidden=!user;$('#navLogout').hidden=!user;
+  const v=$('#view');
+  if(page==='courses')v.innerHTML=courses();
+  else if(page==='course'&&COURSES[p[1]])v.innerHTML=detail(p[1]);
+  else if(page==='login')v.innerHTML=login();
+  else if(page==='dashboard')v.innerHTML=dash();
+  else v.innerHTML=home();
+  window.scrollTo(0,0);
+}
+const home=()=>`<h1>Welcome to the Student Portal</h1><p class="sub">${user?'Hello, '+user+'. Open your dashboard to see your progress.':'Browse our courses, then log in to open your dashboard.'}</p><button class="btn" data-go="courses">View Courses</button>`;
+const courses=()=>`<h1>Available Courses</h1><div class="grid">${Object.entries(COURSES).map(([id,c])=>`<div class="card"><h3>${c.name}</h3><p>${c.desc}</p><p><b>Duration:</b> ${c.weeks} Weeks</p><button class="btn" data-go="course/${id}">View Course</button></div>`).join('')}</div>`;
+const detail=id=>{const c=COURSES[id];return `<div class="card detail"><h1>Course Details</h1><h2>${c.name.toUpperCase()}</h2><p>You selected the ${id} course.</p><p>Course ID: ${id}</p><h3>Topics</h3><ul>${c.topics.map(t=>`<li>${t}</li>`).join('')}</ul><button class="btn blue" data-go="courses">← Back to Courses</button></div>`};
+const login=()=>`<div class="card center"><h2>Student Login</h2><p>Login to access your student dashboard.</p><form id="lf"><div class="row"><label for="u">Student name</label><input id="u" required placeholder="e.g. Ravi"></div><button class="btn" type="submit">Login</button></form></div>`;
+function dash(){
+  const t={overview:`<div class="card"><h2>Dashboard Overview</h2><div class="stats"><div class="stat"><b>4</b><span>Enrolled Courses</span></div><div class="stat"><b>82%</b><span>Average Progress</span></div><div class="stat"><b>12</b><span>Assignments</span></div></div></div>`,
+  profile:`<div class="card"><h2>Profile</h2><p><b>Name:</b> ${user}</p><p><b>Courses:</b></p>${Object.values(COURSES).map(c=>`<div>${c.name} — ${c.pct}%<div class="prog"><i style="width:${c.pct}%"></i></div></div>`).join('')}</div>`,
+  settings:`<div class="card"><h2>Settings</h2><label class="check"><input type="checkbox" data-s="email" ${settings.email?'checked':''}> Enable Email Notifications</label><label class="check"><input type="checkbox" data-s="remind" ${settings.remind?'checked':''}> Enable Course Reminders</label></div>`}[tab];
+  return `<h1>Student Dashboard</h1><p class="sub">Manage your student account.</p><div class="tabs">${['overview','profile','settings'].map(x=>`<button class="tab ${x===tab?'on':''}" data-tab="${x}">${x[0].toUpperCase()+x.slice(1)}</button>`).join('')}</div>${t}`;
+}
+document.addEventListener('click',e=>{
+  const g=e.target.closest('[data-go]');if(g){go(g.dataset.go);return}
+  const t=e.target.closest('[data-tab]');if(t){tab=t.dataset.tab;route();return}
+  if(e.target.id==='navLogout'){user=null;try{localStorage.removeItem('sp_user')}catch(x){}go('login');route()}
+});
+document.addEventListener('submit',e=>{if(e.target.id==='lf'){e.preventDefault();user=$('#u').value.trim();try{localStorage.setItem('sp_user',user)}catch(x){}tab='overview';go('dashboard');route()}});
+document.addEventListener('change',e=>{const s=e.target.dataset.s;if(s){settings[s]=e.target.checked;try{localStorage.setItem('sp_set',JSON.stringify(settings))}catch(x){}}});
+addEventListener('hashchange',route);route();
+</script>
+</body>
+</html>
