@@ -1,0 +1,88 @@
+/* reset Vite's default centered/dark layout */
+html, body, #root {
+  width: 100%;
+  max-width: none;
+  margin: 0;
+  padding: 0;
+  text-align: left;
+  display: block;
+  place-items: initial;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  min-height: 100vh;
+  font-family: "Segoe UI", Arial, sans-serif;
+  background: #f4f6fb;
+  color: #1f2937;
+}
+
+h1, h2, h3 { color: #111827; }
+.navbar h2 { color: #fff; }
+
+.navbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 32px;
+  background: #1e3a8a;
+  color: #fff;
+}
+.logo { margin: 0; }
+.nav-links a {
+  color: #cbd5e1;
+  text-decoration: none;
+  margin-left: 20px;
+  padding-bottom: 4px;
+}
+.nav-links a.active { color: #fff; border-bottom: 2px solid #fff; }
+
+.page { max-width: 1000px; margin: 0 auto; padding: 28px 20px; }
+.page.narrow { max-width: 440px; }
+.muted { color: #6b7280; }
+.muted a { color: #2563eb; }
+
+.stats { display: flex; gap: 16px; flex-wrap: wrap; margin-top: 20px; }
+.stat {
+  flex: 1; min-width: 160px; background: #fff; padding: 20px;
+  border-radius: 12px; text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,.06);
+}
+.stat h3 { margin: 0; font-size: 28px; color: #1e3a8a; }
+.stat p { margin: 6px 0 0; color: #6b7280; }
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 16px;
+}
+
+.card {
+  background: #fff; padding: 20px; border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,.06); margin-bottom: 20px;
+}
+.card h3 { margin-top: 0; }
+.card p { margin: 6px 0; }
+
+.form { display: flex; flex-direction: column; gap: 10px; }
+.form input {
+  padding: 10px 12px; border: 1px solid #d1d5db;
+  border-radius: 8px; font-size: 15px; background: #fff; color: #1f2937;
+}
+.form input:disabled { background: #f3f4f6; color: #6b7280; }
+.form input:focus { outline: 2px solid #93c5fd; border-color: #3b82f6; }
+.row { display: flex; gap: 10px; }
+
+button {
+  background: #2563eb; color: #fff; border: none; padding: 10px 16px;
+  border-radius: 8px; cursor: pointer; font-size: 15px; margin-top: 8px;
+}
+button:hover { background: #1d4ed8; }
+button.danger { background: #dc2626; }
+button.danger:hover { background: #b91c1c; }
+button.secondary { background: #6b7280; }
+button.secondary:hover { background: #4b5563; }
+
+.error { color: #dc2626; margin: 0; }
+ul { padding-left: 20px; }
+li { margin: 6px 0; }

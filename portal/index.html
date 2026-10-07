@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Student Portal</title>
+<style>
+:root{--bg:#f1eaea;--card:#fff;--ink:#222;--mute:#555;--line:#e3d8d8;--green:#1e7a34;--purple:#7a2c8c;--blue:#1a56b8;--pink:#f5b5c3;--red:#d9263b}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#1c1719;--card:#282123;--ink:#f1eaea;--mute:#b9aeb0;--line:#3c3336;--pink:#8a3a4d}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 Arial,Helvetica,sans-serif}
+nav{background:var(--green);color:#fff;display:flex;justify-content:space-between;align-items:center;padding:14px 28px;flex-wrap:wrap;gap:10px}
+nav .brand{font-weight:700;font-size:22px}
+nav .links{display:flex;gap:8px;flex-wrap:wrap}
+nav a{color:#fff;text-decoration:none;padding:6px 14px;border-radius:5px;font-size:15px;cursor:pointer}
+nav a.on{background:#fff;color:#222}
+nav a.logout{background:var(--red)}
+main{max-width:900px;margin:0 auto;padding:36px 24px 60px}
+h1{font-size:32px;margin:0 0 20px}
+h2{margin:0 0 12px}
+.sub{color:var(--mute);margin:-12px 0 22px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:20px}
+.card{background:var(--card);border-radius:10px;padding:22px;box-shadow:0 2px 10px rgba(0,0,0,.08)}
+.card h3{margin:0 0 8px;font-size:22px}
+.card p{margin:0 0 12px;color:var(--mute);font-size:14px}
+.btn{display:inline-block;border:0;border-radius:6px;padding:10px 18px;color:#fff;background:var(--purple);font:inherit;font-size:15px;cursor:pointer}
+.btn.blue{background:var(--blue)}
+.btn.red{background:var(--red)}
+.btn:focus-visible,a:focus-visible,input:focus-visible,textarea:focus-visible,.tab:focus-visible{outline:3px solid #f2b705;outline-offset:2px}
+.hero{text-align:center;padding:60px 20px}
+.hero h1{font-size:38px}
+.hero p{color:var(--mute);margin:0 0 24px}
+.detail{max-width:600px}
+.detail ul{margin:6px 0 20px;padding-left:22px}
+.center{max-width:420px;margin:30px auto}
+.tabs{display:flex;gap:22px;border-bottom:1px solid var(--line);margin-bottom:20px}
+.tab{background:none;border:0;border-bottom:2px solid transparent;padding:8px 2px;font:inherit;color:var(--mute);cursor:pointer}
+.tab.on{color:var(--blue);border-color:var(--blue);font-weight:700}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px;margin:10px 0 18px}
+.stat{background:var(--pink);border-radius:8px;padding:22px 10px;text-align:center}
+.stat b{display:block;font-size:30px}
+.stat span{font-size:14px}
+.check{display:flex;gap:8px;align-items:center;margin:10px 0}
+.row{display:grid;gap:4px;margin:12px 0}
+.row input,.row textarea{padding:9px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--ink);font:inherit}
+.prog{height:8px;background:var(--line);border-radius:4px;overflow:hidden;margin:6px 0 14px}
+.prog i{display:block;height:100%;background:var(--green)}
+.profile p{font-size:16px;color:var(--ink);margin:0 0 10px}
+.actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px}
+.add{margin-top:28px}
+.msg{color:var(--red);font-size:14px;margin:0 0 10px}
+[hidden]{display:none!important}
+</style>
+</head>
+<body>
+<nav>
+  <div class="brand">Student Portal</div>
+  <div class="links">
+    <a data-go="home">Home</a>
+    <a data-go="courses">Courses</a>
+    <a data-go="dashboard" id="navDash" hidden>Dashboard</a>
+    <a data-go="login" id="navLogin">Login</a>
+    <a id="navLogout" class="logout" hidden>Logout</a>
+  </div>
+</nav>
+<main id="view"></main>
+
+<script>
+/* ===== Student details ===== */
+const STUDENT = {
+  name: 's.v.l.n.lohith',
+  email: 'lohith@gmail.com',
+  course: 'Computer Science Engineering',
+  year: '4th year'
+};
+
+/* ===== Default courses ===== */
+const DEFAULT_COURSES = {
+  react:{name:'React',desc:'Learn React from fundamentals to advanced concepts.',weeks:6,topics:['Fundamentals','Practical Coding','Projects','Interview Preparation'],pct:80},
+  javascript:{name:'JavaScript',desc:'Master modern JavaScript programming.',weeks:8,topics:['JavaScript Fundamentals','DOM Manipulation','ES6 Features','Projects'],pct:85},
+  python:{name:'Python',desc:'Learn Python programming from scratch.',weeks:10,topics:['Python Fundamentals','Functions','Data Structures','Projects'],pct:85},
+  java:{name:'Java',desc:'Learn Java and object-oriented programming.',weeks:12,topics:['Java Basics','Loops and Methods','Classes and Objects','Inheritance and Interfaces'],pct:78}
+};
+
+/* ===== State (saved in the browser) ===== */
+let COURSES = {}, loggedIn = false, tab = 'overview', settings = {email:true, remind:true};
+try{
+  COURSES = JSON.parse(localStorage.getItem('sp_courses')) || {};
+  loggedIn = localStorage.getItem('sp_in') === '1';
+  const s = localStorage.getItem('sp_set'); if(s) settings = JSON.parse(s);
+}catch(e){}
+if(!Object.keys(COURSES).length) COURSES = JSON.parse(JSON.stringify(DEFAULT_COURSES));
+const save = () => { try{ localStorage.setItem('sp_courses', JSON.stringify(COURSES)); }catch(e){} };
+
+const $ = q => document.querySelector(q);
+const go = r => { location.hash = '#/' + r };
+const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+/* ===== Router ===== */
+function route(){
+  const p = (location.hash.replace('#/','') || 'home').split('/');
+  let page = p[0];
+  if(page === 'dashboard' && !loggedIn) page = 'login';
+  document.querySelectorAll('nav a[data-go]').forEach(a => a.classList.toggle('on', a.dataset.go === (page === 'course' ? 'courses' : page)));
+  $('#navLogin').hidden = loggedIn; $('#navDash').hidden = !loggedIn; $('#navLogout').hidden = !loggedIn;
+  const v = $('#view');
+  if(page === 'courses') v.innerHTML = courses();
+  else if(page === 'course' && COURSES[p[1]]) v.innerHTML = detail(p[1]);
+  else if(page === 'login') v.innerHTML = login();
+  else if(page === 'dashboard') v.innerHTML = dash();
+  else v.innerHTML = home();
+  window.scrollTo(0,0);
+}
+
+/* ===== Pages ===== */
+const home = () => `<div class="card hero"><h1>Welcome to Student Portal</h1><p>Learn programming, explore courses, and manage your student profile.</p><button class="btn blue" data-go="courses">Explore Courses</button></div>`;
+
+const courses = () => `<h1>Available Courses</h1>
+<div class="grid">${Object.entries(COURSES).map(([id,c]) => `<div class="card"><h3>${esc(c.name)}</h3><p>${esc(c.desc)}</p><p><b>Duration:</b> ${esc(c.weeks)} Weeks</p><button class="btn" data-go="course/${id}">View Course</button></div>`).join('')}</div>
+<div class="card add"><h2>Add a Course</h2>
+<form id="af">
+  <div class="row"><label for="cn">Course name</label><input id="cn" required placeholder="e.g. Node.js"></div>
+  <div class="row"><label for="cd">Description</label><input id="cd" placeholder="Short description"></div>
+  <div class="row"><label for="cw">Duration (weeks)</label><input id="cw" type="number" min="1" value="6"></div>
+  <div class="row"><label for="ct">Topics (comma separated)</label><input id="ct" placeholder="Basics, Practice, Projects"></div>
+  <p class="msg" id="am" hidden></p>
+  <button class="btn" type="submit">+ Add Course</button>
+</form></div>`;
+
+const detail = id => {
+  const c = COURSES[id];
+  return `<div class="card detail"><h1>Course Details</h1><h2>${esc(c.name.toUpperCase())}</h2><p>You selected the ${esc(c.name.toLowerCase())} course.</p><p>Course ID: ${esc(id)}</p><h3>Topics</h3><ul>${c.topics.map(t => `<li>${esc(t)}</li>`).join('')}</ul>
+  <div class="actions"><button class="btn blue" data-go="courses">← Back to Courses</button>${c.custom ? `<button class="btn red" data-del="${id}">Delete Course</button>` : ''}</div></div>`;
+};
+
+const login = () => `<div class="card center"><h2>Student Login</h2><p>Login to access your student dashboard.</p><button class="btn" id="loginBtn">Login</button></div>`;
+
+function dash(){
+  const list = Object.values(COURSES);
+  const avg = list.length ? Math.round(list.reduce((s,c) => s + (c.pct||0), 0) / list.length) : 0;
+  const t = {
+    overview:`<div class="card"><h2>Dashboard Overview</h2><div class="stats"><div class="stat"><b>${list.length}</b><span>Enrolled Courses</span></div><div class="stat"><b>${avg}%</b><span>Average Progress</span></div><div class="stat"><b>12</b><span>Assignments</span></div></div><p>Welcome back, ${esc(STUDENT.name)}! Continue your learning journey.</p></div>`,
+    profile:`<div class="card profile"><h2>My Profile</h2><p><b>Name:</b> ${esc(STUDENT.name)}</p><p><b>Email:</b> ${esc(STUDENT.email)}</p><p><b>Course:</b> ${esc(STUDENT.course)}</p><p><b>Year:</b> ${esc(STUDENT.year)}</p><h3>Course Progress</h3>${list.map(c => `<div>${esc(c.name)} — ${c.pct||0}%<div class="prog"><i style="width:${c.pct||0}%"></i></div></div>`).join('')}</div>`,
+    settings:`<div class="card"><h2>Settings</h2><label class="check"><input type="checkbox" data-s="email" ${settings.email?'checked':''}> Enable Email Notifications</label><label class="check"><input type="checkbox" data-s="remind" ${settings.remind?'checked':''}> Enable Course Reminders</label></div>`
+  }[tab];
+  return `<h1>Student Dashboard</h1><p class="sub">Manage your student account.</p><div class="tabs">${['overview','profile','settings'].map(x => `<button class="tab ${x===tab?'on':''}" data-tab="${x}">${x[0].toUpperCase()+x.slice(1)}</button>`).join('')}</div>${t}`;
+}
+
+/* ===== Events ===== */
+document.addEventListener('click', e => {
+  const g = e.target.closest('[data-go]'); if(g){ go(g.dataset.go); return }
+  const t = e.target.closest('[data-tab]'); if(t){ tab = t.dataset.tab; route(); return }
+  const d = e.target.closest('[data-del]'); if(d){ delete COURSES[d.dataset.del]; save(); go('courses'); return }
+  if(e.target.id === 'loginBtn'){ loggedIn = true; try{ localStorage.setItem('sp_in','1') }catch(x){} tab = 'overview'; go('dashboard'); route(); return }
+  if(e.target.id === 'navLogout'){ loggedIn = false; try{ localStorage.removeItem('sp_in') }catch(x){} go('login'); route() }
+});
+document.addEventListener('submit', e => {
+  if(e.target.id !== 'af') return;
+  e.preventDefault();
+  const name = $('#cn').value.trim();
+  const id = name.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
+  const msg = $('#am');
+  if(!name || !id){ msg.textContent = 'Please enter a course name.'; msg.hidden = false; return }
+  if(COURSES[id]){ msg.textContent = 'This course already exists.'; msg.hidden = false; return }
+  const topics = $('#ct').value.split(',').map(s => s.trim()).filter(Boolean);
+  COURSES[id] = {
+    name,
+    desc: $('#cd').value.trim() || 'New course added by you.',
+    weeks: Math.max(1, Number($('#cw').value) || 1),
+    topics: topics.length ? topics : ['Fundamentals','Practice','Projects'],
+    pct: 0, custom: true
+  };
+  save(); route();
+});
+document.addEventListener('change', e => {
+  const s = e.target.dataset.s;
+  if(s){ settings[s] = e.target.checked; try{ localStorage.setItem('sp_set', JSON.stringify(settings)) }catch(x){} }
+});
+addEventListener('hashchange', route);
+route();
+</script>
+</body>
+</html>
